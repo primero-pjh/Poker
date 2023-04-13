@@ -1,0 +1,202 @@
+#!/usr/bin/env node
+/**
+ * Module dependencies.
+ */
+
+const app = require("../app")["app"];
+const cfg = require("../config");
+const user_dict = require("../app")["user_dict"];
+const debug = require("debug")("backend:server");
+const http = require("http");
+const jwtFunc = require("../jwt");
+const fs = require("fs");
+const { env } = require("process");
+const appRoot = require("app-root-path");
+const chalk = require("chalk");
+let knex = require(`${appRoot.path}/db`);
+let CRT_ERROR_CODE = require(`${appRoot.path}/error_code`);
+/**
+ * Get port from environment and store in Express.
+ */
+
+const port = normalizePort(process.env.PORT || "3000");
+app.set("port", port);
+
+/**
+ * Create HTTP server.
+ */
+
+const server = http.createServer(app);
+const io = require("socket.io")(server, {
+    cors: {
+        origin: [
+            "http://localhost:8080",
+            "https://localhost:8080",
+            "http://localhost:3000",
+            "https://localhost:3000",
+            "https://admin.pritras.com",
+            "https://ybr.pritras.com",
+        ],
+    },
+});
+io.use((socket, next) => {
+    let token = socket.handshake.auth.token.split(" ")[1];
+    if (token) {
+        /* jwt check */
+        jwtFunc.verify(token).then(function (res) {
+            if (!res) {
+                socket.emit("/error", {
+                    message: "로그인 토큰 만료!\n",
+                });
+            }
+        });
+        next();
+    } else {
+        console.error("\u001b[41m", "jwt token error", "\x1b[40m");
+        socket.emit("/error", {
+            message: "로그인 토큰 만료!\n",
+        });
+        next();
+    }
+});
+
+let start_dir = "./routes/socket";
+let _socket = null;
+let isRead = false;
+function dfs(dir) {
+    fs.readdir(dir, (err, files) => {
+        files.forEach((file) => {
+            let check = fs.statSync(`${dir}/${file}`).isDirectory();
+            if (check) {
+                dfs(`${dir}/${file}`);
+            } else {
+                // console.log(`require: ${dir}/${file}`);
+                require(`${dir}/${file}`)(_socket);
+            }
+        });
+    });
+}
+
+const path = appRoot.path;
+
+io.on("connection", async (socket) => {
+    socket.emit("connection", socket.id);
+    socket.onAny(async (e) => {
+        console.log(chalk.yellow.bgRed.bold(`소켓이벤트: ${e}`));
+        const headers = socket.handshake.headers;
+        const auth = socket.handshake.auth;
+
+        if (e.includes("/*")) {
+            const token = auth.token.split(" ")[1];
+            jwtFunc.verify(token).then(async (res) => {
+                if (!res || !res.UID) {
+                    io.to(socket.id).emit("/error", {
+                        success: 0,
+                        code: "LOGIN_ERROR",
+                        message: CRT_ERROR_CODE["LOGIN_ERROR"],
+                    });
+                    return;
+                }
+                await knex.table("socketLogs").insert({
+                    event: e,
+                    uid: res.UID,
+                    host: headers.host,
+                    origin: headers.origin,
+                    connection: headers.connection,
+                    platform: headers["sec-ch-ua-platform"],
+                    agent: headers["user-agent"],
+                    dateAdded: new Date(),
+                });
+            });
+        }
+    });
+    // console.log('connect-socket', socket.id);
+    _socket = socket;
+    dfs(path + "/routes/socket");
+
+    socket.on("disconnect", () => {
+        let socketId = socket.id;
+        console.log("disconnect:", socket.id);
+
+        for (let key in user_dict) {
+            if (
+                user_dict.hasOwnProperty(key) &&
+                user_dict[key].socketId == socketId
+            ) {
+                /* couple 이 있다면 logout(disconnect) 을 알림 */
+                if (user_dict[key].hasOwnProperty("coupleInfoId")) {
+                    io.to(`/${user_dict[key].coupleInfoId}`).emit(
+                        "/client/couple/logOut"
+                    );
+                }
+                /* admin-page data 전달 */
+                io.to("admin").emit(`/client/admin/disconnect/user`, {
+                    phoneNumber: key,
+                    socketId,
+                });
+                delete user_dict[key];
+            }
+        }
+    });
+
+    module.exports = { io, socket, redisCli };
+});
+/**
+ *
+ * Listen on provided port, on all network interfaces.
+ */
+
+server.listen(port, () => {
+    console.log(`listening on *: ${port}`);
+});
+server.on("error", onError);
+server.on("listening", onListening);
+
+/**
+ * Normalize a port into a number, string, or false.
+ */
+
+function normalizePort(val) {
+    var port = parseInt(val, 10);
+    if (isNaN(port)) {
+        return val;
+    }
+    if (port >= 0) {
+        return port;
+    }
+    return false;
+}
+
+/**
+ * Event listener for HTTP server "error" event.
+ */
+
+function onError(error) {
+    if (error.syscall !== "listen") {
+        throw error;
+    }
+    var bind = typeof port === "string" ? "Pipe " + port : "Port " + port;
+    // handle specific listen errors with friendly messages
+    switch (error.code) {
+        case "EACCES":
+            console.error(bind + " requires elevated privileges");
+            process.exit(1);
+            break;
+        case "EADDRINUSE":
+            console.error(bind + " is already in use");
+            process.exit(1);
+            break;
+        default:
+            throw error;
+    }
+}
+
+/**
+ * Event listener for HTTP server "listening" event.
+ */
+
+function onListening() {
+    var addr = server.address();
+    var bind = typeof addr === "string" ? "pipe " + addr : "port " + addr.port;
+    debug("Listening on " + bind);
+}

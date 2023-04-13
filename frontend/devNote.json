@@ -1,0 +1,20 @@
+{
+	"패치노트": {
+		"0.0.1": [
+			"23.04.13) 초기 세팅 작업",
+			"> 로그인 화면",
+			"> 홈 화면",
+			"> DB initDecks Table 생성 및 값 삽입"
+		]
+	}
+}
+
+/*
+"> home 화면 작업"
+"> calendar-> 목록형에서 일정의 D-day 계산 추가",
+"> chat page에서 message send 했을 때 scroll이 최하단으로 오지 않는 오류 수정"
+"> profile 동시작업이 가능하도록 작업"
+"> profile에서 대표이미지, 각 사진을 볼 수 있는 toggle 버튼 추가"
+"> peer js 도입"
+"> login 움직이는 페이지 도입"
+*/
