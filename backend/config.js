@@ -1,8 +1,8 @@
 const cfg = {
-  host: 'localhost',
+  host: 'pritras.vps.phps.kr',
   user: 'primero',
   password: 'raffine9847!',
-  database: 'ybr',
+  database: 'Poker',
   jwtKey: 'abcdefadfsafsfasfa',
   redisPass: 'Raffine9847!',
 }

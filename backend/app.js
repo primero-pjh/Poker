@@ -28,13 +28,7 @@ app.use(cors());
 
 /* router */
 app.use('/', require('./routes/index'));
-app.use('/', require('./routes/api/user/login'));
-app.use('/', require('./routes/api/user/check'));
-app.use('/', require('./routes/api/user/upload/image'));
-app.use('/', require('./routes/api/user/upload/backImage'));
-app.use('/', require('./routes/api/admin/login'));
-app.use('/', require('./routes/api/admin/redis'));
-app.use('/', require('./routes/api/temp/upload/image'));
+app.use('/', require('./routes/api/initDecks/get'));
 
 
 // catch 404 and forward to error handler

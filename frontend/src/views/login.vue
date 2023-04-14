@@ -88,6 +88,7 @@ export default {
     },
     created: function() {
         let vm = this;
+        vm.$router.push("/home");
         let token = vm.$store.state.getCookie("token");
         /* 자동로그인을 위한 splash 화면 */
         if(token) { vm.showSplash = true; }

@@ -34,8 +34,8 @@ const io = require("socket.io")(server, {
             "https://localhost:8080",
             "http://localhost:3000",
             "https://localhost:3000",
-            "https://admin.pritras.com",
-            "https://ybr.pritras.com",
+            "https://os.pritras.com",
+            "http://os.pritras.com",
         ],
     },
 });
@@ -88,26 +88,16 @@ io.on("connection", async (socket) => {
 
         if (e.includes("/*")) {
             const token = auth.token.split(" ")[1];
-            jwtFunc.verify(token).then(async (res) => {
-                if (!res || !res.UID) {
-                    io.to(socket.id).emit("/error", {
-                        success: 0,
-                        code: "LOGIN_ERROR",
-                        message: CRT_ERROR_CODE["LOGIN_ERROR"],
-                    });
-                    return;
-                }
-                await knex.table("socketLogs").insert({
-                    event: e,
-                    uid: res.UID,
-                    host: headers.host,
-                    origin: headers.origin,
-                    connection: headers.connection,
-                    platform: headers["sec-ch-ua-platform"],
-                    agent: headers["user-agent"],
-                    dateAdded: new Date(),
-                });
-            });
+            // jwtFunc.verify(token).then(async (res) => {
+            //     if (!res || !res.UID) {
+            //         io.to(socket.id).emit("/error", {
+            //             success: 0,
+            //             code: "LOGIN_ERROR",
+            //             message: CRT_ERROR_CODE["LOGIN_ERROR"],
+            //         });
+            //         return;
+            //     }
+            // });
         }
     });
     // console.log('connect-socket', socket.id);
@@ -118,25 +108,6 @@ io.on("connection", async (socket) => {
         let socketId = socket.id;
         console.log("disconnect:", socket.id);
 
-        for (let key in user_dict) {
-            if (
-                user_dict.hasOwnProperty(key) &&
-                user_dict[key].socketId == socketId
-            ) {
-                /* couple 이 있다면 logout(disconnect) 을 알림 */
-                if (user_dict[key].hasOwnProperty("coupleInfoId")) {
-                    io.to(`/${user_dict[key].coupleInfoId}`).emit(
-                        "/client/couple/logOut"
-                    );
-                }
-                /* admin-page data 전달 */
-                io.to("admin").emit(`/client/admin/disconnect/user`, {
-                    phoneNumber: key,
-                    socketId,
-                });
-                delete user_dict[key];
-            }
-        }
     });
 
     module.exports = { io, socket, redisCli };

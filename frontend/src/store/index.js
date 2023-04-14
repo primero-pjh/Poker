@@ -1,6 +1,4 @@
 import { createStore } from "vuex";
-import { showSuccessToast, showFailToast } from 'vant';
-import { showNotify, closeNotify } from 'vant';
 
 // state, getters, mutations, actions, modules
 const store = createStore({
@@ -13,25 +11,13 @@ const store = createStore({
         initDecks: [],
 
         user: {
-            coupleInfoId: 0,
             userId: '',
             userName: '',
             phoneNumber: '',
-            image: '',
+            coverImage: '',
             socketId: '',
             isAdmin: '',
-            spousePhoneNumber: '',
         },
-
-        couple: {
-            coupleInfoId: 0,
-            userId: '',
-            userName: '',
-            phoneNumber: '',
-            image: '',
-            socketId: '',
-        },
-
         /* useful function */
         getCookie: function (name) {
             let value = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
@@ -55,29 +41,6 @@ const store = createStore({
             }
         },
         axiosError: function(data) {
-            /* socket id가 지정이 되지 않았을 때 */
-            if(data.code == "SOCKET") {
-                showFailToast({
-                    message: data.message,
-                    wordBreak: 'break-all',
-                });
-                window.location.reload();
-                return;
-            }
-            if(data.code == "LOGIN_ERROR") {
-                showFailToast({
-                    message: data.message,
-                    wordBreak: 'break-all',
-                });
-                window.location.reload();
-                return;
-            }
-            if(!data.code) {
-                showFailToast({
-                    message: data.message,
-                    wordBreak: 'break-all',
-                });
-            }
         },
         
         tempObj: function(obj) {
@@ -85,19 +48,8 @@ const store = createStore({
         },
 
         notify: function(type, message) {
-            showNotify({ 
-                type,
-                message,
-            });
         },
         toast: function(type, message) {
-            if(type == 'success') {
-                message = message ? message : '성공!';
-                showSuccessToast(message);
-            } else if (type == 'fail' || type == 'danger') {
-                message = message ? message : '실패!';
-                showSuccessToast(message);
-            }
         }
     },
     getters: {
@@ -133,30 +85,6 @@ const store = createStore({
         },
         setSocketId(state, id) {
             state.user.socketId = id;
-        },
-
-        /* couple function */
-        setCouple(state, couple) {
-            if(!couple) {
-                state.couple.coupleInfoId = 0;
-                state.couple.userId = "";
-                state.couple.userName = "";
-                state.couple.image = "";
-                state.couple.phoneNumber = "";
-                state.couple.socketId = "";
-                state.couple.backgroundImage = "";
-            } else {
-                state.couple.coupleInfoId = couple.coupleInfoId;
-                state.couple.userId = couple.userId;
-                state.couple.userName = couple.userName;
-                state.couple.image = couple.image;
-                state.couple.phoneNumber = couple.phoneNumber;
-                state.couple.socketId = couple.socketId;
-                state.couple.backgroundImage = couple.backgroundImage;
-            }
-        },
-        setCoupleSocketId(state, id) {
-            state.couple.socketId = id;
         },
         logOut: function(state) {
             if(state.socket) {
