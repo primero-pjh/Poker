@@ -97,6 +97,73 @@ export default {
 
             vm.step = 0;
         },
+
+        /* 같은 숫자 확인 */
+        checkSameNum(decks, num) {
+            let cnt = 0;
+            for(let i=0; i<decks.length; i++) {
+                if(decks[i].number == num) { cnt++; }
+            }
+            return cnt;
+        },
+        checkSameShape(decks, shape) {
+            let cnt = 0;
+            for(let i=0; i<decks.length; i++) {
+                if(decks[i].shape == shape) { cnt++; }
+            }
+            return cnt;
+        },
+
+        /* 족보 확인 */
+        checkPedigree(decks) {
+            let vm = this;
+            let isStraight = 0;
+            let straightMax = 0;                // 연속(5번)해서 이어지는 수의 최대
+            let straightMin = 0;                // 연속(5번)해서 이어지는 수의 최소
+            // 같은 문양의 수
+            let sameShape = {
+                spade: 0,
+                diamond: 0,
+                heart: 0,
+                clover: 0,
+            }
+            let sameNumCnt = 0;                 // 같은 숫자의 수
+            for(let i=0; i<decks.length; i++) {
+                var result = vm.checkSameNum(decks, decks[i].number);
+                sameNumCnt = (sameNumCnt <= result) ? result : sameNumCnt;
+                var result = vm.checkSameNum(decks, decks[i].shape);
+                sameShape[decks[i].shape] = result;
+            }
+
+        },
+        returnPedigree(obj) {
+            // 로티플
+            if(obj.sameShape.spade >= 5 && obj.straightMax == 13) {
+                return "Royal Straight Flush";
+            }
+            // 스티플
+            if(
+                (
+                    obj.sameShape.spade >= 5 || 
+                    obj.sameShape.diamond >= 5 || 
+                    obj.sameShape.heart >= 5 || 
+                    obj.sameShape.clover >= 5
+                ) &&
+                obj.isStraight) {
+                return "Back Straight Flush";
+            }
+            // 백티플
+            // 포카드
+            // 풀 하우스
+            // 플러쉬
+            // 마운틴
+            // 백 스트레이트
+            // 스트레이트
+            // 트리플
+            // 투페어
+            // 원페어
+            // 노페어
+        },
         dropMyCard(playerIdx, cardIdx) {
             let vm = this;
             vm.player[playerIdx].decks.splice(cardIdx, 1);
