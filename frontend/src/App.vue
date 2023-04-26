@@ -18,6 +18,8 @@
         },
         mounted: function() {
             let vm = this;
+            vm.$store.commit('loadInitDecks');
+            vm.$store.commit('loadPedigree');
             if(!vm.$store.state.user.socketId) {
                 vm.$router.push('/login');
             }

@@ -1,4 +1,5 @@
 import { createStore } from "vuex";
+import axios from "axios";
 
 // state, getters, mutations, actions, modules
 const store = createStore({
@@ -9,6 +10,10 @@ const store = createStore({
         height: window.screen.height,
 
         initDecks: [],
+        initDecksDict: {},
+
+        pedigree: [],
+        pedigree_rank_dict: {},
 
         user: {
             userId: '',
@@ -18,6 +23,7 @@ const store = createStore({
             socketId: '',
             isAdmin: '',
         },
+
         /* useful function */
         getCookie: function (name) {
             let value = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
@@ -57,6 +63,35 @@ const store = createStore({
         getUser(state) { return state.user; },
     },
     mutations: {
+        loadInitDecks(state) {
+            axios.get(`/api/initDecks`, {}).then((res) => {
+                let data = res.data;
+                if(data.success) {
+                    let row = data.decks;
+                    state.initDecksDict = new Object();
+                    row.map((x) => {
+                        let key = `${x.number}/${x.shape}`;
+                        state.initDecksDict[key] = x.initDeckId;
+                    });
+                    console.log("initDecksDict:", state.initDecksDict);
+                    state.initDecks = row;
+                }
+            });
+        },
+        loadPedigree(state) {
+            axios.get(`/api/pedigree`, {}).then((res) => {
+                let data = res.data;
+                if(data.success) {
+                    let row = data.pedigree;
+                    state.pedigree_rank_dict = new Object();
+                    row.map((x) => {
+                        state.pedigree_rank_dict[x.name] = x.rank;
+                    });
+                    state.pedigree = row;
+                    console.log("pedigree:", state.pedigree);
+                }
+            });
+        },  
         setSocket(state, socket) {
             state.socket = socket;
         },

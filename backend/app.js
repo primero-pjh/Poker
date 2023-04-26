@@ -29,6 +29,7 @@ app.use(cors());
 /* router */
 app.use('/', require('./routes/index'));
 app.use('/', require('./routes/api/initDecks/get'));
+app.use('/', require('./routes/api/pedigree/get'));
 
 
 // catch 404 and forward to error handler
