@@ -159,6 +159,19 @@ export default {
         },
         /* straight 확인 */
         checkStraight(decks) {
+            let vm = this;
+            decks = [
+                {initDeckId: 31, key: '2H', number: 3, shape: 'heart', image: ''},
+                {initDeckId: 44, key: '2C', number: 4, shape: 'clover', image: ''},
+                {initDeckId: 34, key: '5H', number: 5, shape: 'heart', image: ''},
+                {initDeckId: 38, key: '9H', number: 6, shape: 'heart', image: ''},
+                {initDeckId: 51, key: '9C', number: 7, shape: 'clover', image: ''},
+                {initDeckId: 39, key: '10H', number: 8, shape: 'heart', image: ''},
+                {initDeckId: 42, key: 'KH', number: 9, shape: 'heart', image: ''},
+            ];
+            let isStraight = 0;
+            let straightMax = 0;
+            let straightMin = 0;
             /* straight : 5장 이상 */
             if(decks.length < 5) {
                 return {
@@ -169,31 +182,25 @@ export default {
             }
 
             /* 정렬 */
+            let temp_decks = vm.$store.state.tempObj(decks);
+            temp_decks.sort(function (a, b) {
+                return a.number - b.number;
+            });
 
-            function dfs(idx, value, list) {
-                for(let i=idx; i<list.length; i++) {
-                    if(list[i].number - value != 1 ) {
-                        return;
-                    } else {
-                        dfs(i+1, list[i].number, list);
-                    }
-                }
-            }
-            for(let i=0; i<decks.length - 4; i++) {
-                dfs(i+1, decks[i].number, decks);
-            }
+           
+            console.log("isStraight :", isStraight);
+            console.log("straightMax :", straightMax);
+            console.log("straightMin :", straightMin);
             return {
-                isStraight: 0,
-                straightMax: 0,
-                straightMin: 0,
+                isStraight,
+                straightMax,
+                straightMin,
             };
         },
 
         /* 족보 확인 */
         checkPedigree(idx, decks) {
             let vm = this;
-            console.log('vm.player[idx]:', vm.player[idx]);
-            console.log('decks:', decks);
             let isStraight = 0;                                     // 스트레이트인지 확인
             let straightMax = 0;                                    // 연속(5번)해서 이어지는 수의 최대
             let straightMin = 0;                                    // 연속(5번)해서 이어지는 수의 최소
@@ -505,7 +512,6 @@ export default {
             let winner_rank = 0;
             
             if(vm.step == 6) {
-                console.log("player:", vm.player);
                 player_pdg_rank.push(vm.player[0]);
                 /* 1. 족보 순위 */
                 for(let i=1; i<vm.player.length; i++) {
