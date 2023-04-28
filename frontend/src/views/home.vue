@@ -3,8 +3,7 @@
         <q-layout view="lhh LpR lff"
             container
             style="height: 500px"
-            class="shadow-2 rounded-borders"
-            :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-grey-3'">
+            class="shadow-2 rounded-borders" :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-grey-3'">
             <q-header reveal :class="$q.dark.isActive ? 'bg-secondary' : 'bg-black'">
                 <q-toolbar>
                     <!-- <q-btn flat @click="drawerLeft = !drawerLeft" 
@@ -17,12 +16,7 @@
                         round dense icon="menu" />
                 </q-toolbar>
             </q-header>
-            <q-drawer
-                side="right"
-                v-model="drawerRight"
-                bordered
-                :width="200"
-                :breakpoint="1000">
+            <q-drawer side="right" v-model="drawerRight" bordered :width="200" :breakpoint="1000">
                 <q-scroll-area class="fit">
                     <div class="text-right bg-grey">
                         <q-btn icon="close" flat dense @click="drawerRight=!drawerRight" />
@@ -44,8 +38,7 @@
                     </div>
                     <div style="display: flex;">
                         <div v-for="row, playerIdx in player" :key="playerIdx" 
-                            class="q-pa-sm"
-                            style="border: 1px solid #aaa;">
+                            class="q-pa-sm" style="border: 1px solid #aaa;">
                             <p class="text-bold">player {{ row.order }}의 패</p>
                             <div v-for="item, cardIdx in row.decks" :key="cardIdx"
                                 style="display: flex; justify-content: space-between;">
@@ -160,15 +153,15 @@ export default {
         /* straight 확인 */
         checkStraight(decks) {
             let vm = this;
-            decks = [
-                {initDeckId: 31, key: '2H', number: 3, shape: 'heart', image: ''},
-                {initDeckId: 44, key: '2C', number: 4, shape: 'clover', image: ''},
-                {initDeckId: 34, key: '5H', number: 5, shape: 'heart', image: ''},
-                {initDeckId: 38, key: '9H', number: 6, shape: 'heart', image: ''},
-                {initDeckId: 51, key: '9C', number: 7, shape: 'clover', image: ''},
-                {initDeckId: 39, key: '10H', number: 8, shape: 'heart', image: ''},
-                {initDeckId: 42, key: 'KH', number: 9, shape: 'heart', image: ''},
-            ];
+            // decks = [
+            //     {initDeckId: 31, key: '2H', number: 3, shape: 'heart', image: ''},
+            //     {initDeckId: 44, key: '2C', number: 4, shape: 'clover', image: ''},
+            //     {initDeckId: 34, key: '5H', number: 5, shape: 'heart', image: ''},
+            //     {initDeckId: 38, key: '9H', number: 6, shape: 'heart', image: ''},
+            //     {initDeckId: 51, key: '9C', number: 7, shape: 'clover', image: ''},
+            //     {initDeckId: 39, key: '10H', number: 10, shape: 'heart', image: ''},
+            //     {initDeckId: 42, key: 'KH', number: 12, shape: 'heart', image: ''},
+            // ];
             let isStraight = 0;
             let straightMax = 0;
             let straightMin = 0;
@@ -187,10 +180,21 @@ export default {
                 return a.number - b.number;
             });
 
+            for(let i=0; i<temp_decks.length - 4; i++) {
+                let cnt = 1;
+                for(let j=i; j<i+4; j++) {
+                    if(temp_decks[j+1].number - temp_decks[j].number == 1) {
+                        cnt++;
+                    }
+                }
+                if(cnt == 5) {
+                    isStraight = 1;
+                    straightMin = temp_decks[i].number;
+                    straightMax = temp_decks[i+4].number;
+                }
+                cnt = 0;
+            }
            
-            console.log("isStraight :", isStraight);
-            console.log("straightMax :", straightMax);
-            console.log("straightMin :", straightMin);
             return {
                 isStraight,
                 straightMax,
@@ -206,6 +210,8 @@ export default {
             let straightMin = 0;                                    // 연속(5번)해서 이어지는 수의 최소
             let highNumber = decks.find(x=>x.number == 1) ? 14 : 0; // decks 중 가장 높은 숫자
             let lowNumber = 14;                                     // decks 중 가장 낮은 숫자
+            let highShape = 'clover';                               // decks 중 가장 높은 문양
+            let lowShape = 'spade';                                 // decks 중 가장 낮은 문양
             // 같은 문양의 수
             let sameShape = {
                 spade: 0,
@@ -268,6 +274,7 @@ export default {
             vm.player[idx]["pedigree"] = pedigree.label;
             vm.player[idx]["pedigree_rank"] = pedigree.rank;
         },
+
         returnPedigree(obj) {
             let vm = this;
             if(!obj) { 
@@ -276,11 +283,33 @@ export default {
                 }; 
             }
             // 로티플
-            if(obj.sameShape.spade >= 5 && obj.isStraight && obj.straightMax == 14) {
+            if(
+                (
+                    obj.sameShape.spade >= 5 || 
+                    obj.sameShape.diamond >= 5 || 
+                    obj.sameShape.heart >= 5 || 
+                    obj.sameShape.clover >= 5
+                )
+                && obj.isStraight && obj.straightMax == 14 && obj.straightMax == 10) {
                 return {
                     name: "Royal Straight Flush",
                     label: "Royal Straight Flush",
                     rank: vm.$store.state.pedigree_rank_dict['Royal Straight Flush']
+                };
+            }
+            // 백티플
+            if(
+                (
+                    obj.sameShape.spade >= 5 || 
+                    obj.sameShape.diamond >= 5 || 
+                    obj.sameShape.heart >= 5 || 
+                    obj.sameShape.clover >= 5
+                )
+                && obj.isStraight && obj.straightMax == 5 && obj.straightMax == 1) {
+                return {
+                    name: "Back Straight Flush",
+                    label: "Back Straight Flush",
+                    rank: vm.$store.state.pedigree_rank_dict['Back Straight Flush']
                 };
             }
             // 스티플
@@ -291,11 +320,13 @@ export default {
                     obj.sameShape.heart >= 5 || 
                     obj.sameShape.clover >= 5
                 ) 
-                &&
-                obj.isStraight) {
-                return "Straight Flush";
+                && obj.isStraight)  {
+                return {
+                    name: "Straight Flush",
+                    label: "Straight Flush",
+                    rank: vm.$store.state.pedigree_rank_dict['Straight Flush']
+                };
             }
-            // 백티플
             // 포카드
             if(obj.sameNumCnt >= 4) {
                 for(var fk_n in obj.sameNum) {
@@ -309,7 +340,6 @@ export default {
                     }
                 }
             }
-            
             // 풀 하우스
             let fullHouse = [];
             if(obj.sameNumCnt >= 3) {
@@ -357,7 +387,7 @@ export default {
                 };
             }
             // 백 스트레이트
-            if( obj.isStraight == 1 && obj.straightMin == 1 ) {
+            if( obj.isStraight == 1 && obj.straightMin == 1 && obj.straightMax == 5 ) {
                 let name = "Back Straight";
                 return {
                     label: `${name}`,
@@ -463,6 +493,7 @@ export default {
             for(let i=0; i<vm.playerCount; i++) {
                 vm.checkPedigree(i, vm.player[i].decks);
             }
+            console.log("player:", vm.player);
         },
 
         /* 게임 초반부 - 카드를 섞음 */
@@ -548,8 +579,7 @@ export default {
         },
         loadSortOrder() {
             let vm = this;
-        },  
-        
+        },
     },
     mounted() {
         let vm = this;
